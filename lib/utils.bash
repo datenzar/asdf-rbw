@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-# TODO: Ensure this is the correct GitHub homepage where releases can be downloaded for rbw.
 GH_REPO="https://github.com/doy/rbw"
 TOOL_NAME="rbw"
 TOOL_TEST="rbw --version"
@@ -31,20 +30,43 @@ list_github_tags() {
 }
 
 list_all_versions() {
-	# TODO: Adapt this. By default we simply list the tag names from GitHub releases.
-	# Change this function if rbw has other means of determining installable versions.
 	list_github_tags
 }
 
+get_platform() {
+	local platform
+	platform="$(uname -s | tr '[:upper:]' '[:lower:]')"
+
+	case "$platform" in
+	linux) echo "unknown-linux-musl" ;;
+	darwin) echo "apple-darwin" ;;
+	*) fail "Platform '$platform' not supported!" ;;
+	esac
+}
+
+get_arch() {
+	local arch
+	arch="$(uname -m)"
+
+	case "$arch" in
+	x86_64) echo "x86_64" ;;
+	aarch64 | arm64) echo "aarch64" ;;
+	armv7l) echo "armv7" ;;
+	*) fail "Architecture '$arch' not supported!" ;;
+	esac
+}
+
 download_release() {
-	local version filename url
+	local version filename url platform arch
 	version="$1"
 	filename="$2"
+	platform="$(get_platform)"
+	arch="$(get_arch)"
 
-	# TODO: Adapt the release URL convention for rbw
-	url="$GH_REPO/archive/v${version}.tar.gz"
+	# rbw releases binaries with format: rbw-{version}-{arch}-{platform}.tar.gz
+	url="$GH_REPO/releases/download/${version}/rbw-${version}-${arch}-${platform}.tar.gz"
 
-	echo "* Downloading $TOOL_NAME release $version..."
+	echo "* Downloading $TOOL_NAME release $version for ${arch}-${platform}..."
 	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
 }
 
@@ -61,7 +83,7 @@ install_version() {
 		mkdir -p "$install_path"
 		cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
-		# TODO: Assert rbw executable exists.
+		# Ensure rbw executable exists and is executable
 		local tool_cmd
 		tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
 		test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
