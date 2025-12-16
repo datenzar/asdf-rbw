@@ -64,8 +64,9 @@ download_release() {
 	platform="$(get_platform)"
 	arch="$(get_arch)"
 
-	# rbw releases binaries with format: rbw-{version}-{arch}-{platform}.tar.gz
-	# Note: versions do not include 'v' prefix (already stripped by list_github_tags)
+	# rbw releases use tags without 'v' prefix (e.g., "1.0.0" not "v1.0.0")
+	# Download URL format: rbw-{version}-{arch}-{platform}.tar.gz
+	# Example: https://github.com/doy/rbw/releases/download/1.0.0/rbw-1.0.0-x86_64-unknown-linux-musl.tar.gz
 	url="$GH_REPO/releases/download/${version}/rbw-${version}-${arch}-${platform}.tar.gz"
 
 	echo "* Downloading $TOOL_NAME release $version for ${arch}-${platform}..."
